@@ -1,2 +1,2 @@
 # FireEyeHX
-## Collection of tools used to manage FireEye HX
+Collection of tools used to manage FireEye HX
