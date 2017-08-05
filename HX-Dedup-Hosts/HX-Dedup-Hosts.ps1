@@ -13,7 +13,7 @@
     Port: Port number the HX server is listening on
  
 .EXAMPLE
-    C:\> HX-Dedup-Hosts.ps1 -Server x.x.x.x-Port ####
+    C:\> HX-Dedup-Hosts.ps1 -Server x.x.x.x -Port ####
  
 .NOTES   
     Author: Jeff Williams
