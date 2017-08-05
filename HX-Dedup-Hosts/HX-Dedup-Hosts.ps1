@@ -1,5 +1,5 @@
 ﻿<#
-.SYSNOPSIS
+.SYNOPSIS
     Removes hosts in HX with duplicate hostnames.
  
 .DESCRIPTION
@@ -7,7 +7,7 @@
     It will sort and identify the host with the most recent last_poll_timestamp
     and delete the rest from HX.
  
-.PARAMETERS
+.PARAMETER
     Server: IP address or URL of the HX server
  
     Port: Port number the HX server is listening on
