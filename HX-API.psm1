@@ -26,15 +26,16 @@ $Port = "3000"
 $Url = "https://$Server`:$Port"
 
 
+
 #------------------#
 #  Authentication  #
 #------------------#
 
 # Enables the use of Self Signed Certs
-Function Ignore-SelfSignedCerts {
+ Function Ignore-SelfSignedCerts {
     try
     {
-
+ 
         Write-Host "Adding TrustAllCertsPolicy type." -ForegroundColor White
         Add-Type -TypeDefinition  @"
         using System.Net;
@@ -56,43 +57,43 @@ Function Ignore-SelfSignedCerts {
         {
         Write-Host $_ -ForegroundColor "Yellow"
         }
-
+ 
     [System.Net.ServicePointManager]::CertificatePolicy = New-Object TrustAllCertsPolicy
     }
-
+ 
 # Authenticates to the HX Server and returns a user Token
 Function HX-Auth {
     # Defining Parameters
     Param(
-        [Parameter(Mandatory=$TRUE)]
+        [Parameter(Mandatory=$true)]
         [string]$URL
         )
 
-    # Prompts for and processes API user creds  
+    # Prompts for and processes API user creds   
     $c = Get-Credential
     $cpair = "$($c.username):$($c.GetNetworkCredential().Password)"
     $key = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($cpair))
-
+   
     # Required Header info
     $header = @{
         "Accept" = "application/json"
         "Authorization" = "Basic $key"
         }
-
+   
     # Authenticates to the HX server
     $gettoken = Invoke-WebRequest -Uri "$URL/hx/api/v3/token" -Headers $header -Method Get
-    # Gets just the Token info from the get request
+    # Gets just the Token info from the get request 
     $token = $gettoken.Headers.'X-FeApi-Token'
     $token
     }
-
+ 
 # Logs off API user of supplied Token
 Function HX-DeAuth {
     # Defining Parameters
     Param(
-        [Parameter(Mandatory=$TRUE)]
+        [Parameter(Mandatory=$true)]
         [string]$URL,
-        [Parameter(Mandatory=$TRUE)]
+        [Parameter(Mandatory=$true)]
         [string]$Token
         )
 
@@ -101,9 +102,9 @@ Function HX-DeAuth {
         "Accept" = "application/json"
         "X-FeApi-Token" = "$Token"
         }
-    # Deletes user token 
+   
     $apiLogOff = Invoke-WebRequest -Uri "$URL/hx/api/v3/token" -Headers $header -Method Delete
-    $apiLogOff
+    $apiLogOff.message
     }
 
 
@@ -111,23 +112,23 @@ Function HX-DeAuth {
 #-----------#
 #  Version  #
 #-----------#
-
+ 
 # Returns a list of All hosts in FireEye
 Function HX-Get-Version {
     # Defining Parameters
     Param(
-        [Parameter(Mandatory=$TRUE)]
+        [Parameter(Mandatory=$true)]
         [string]$URL,
-        [Parameter(Mandatory=$TRUE)]
+        [Parameter(Mandatory=$true)]
         [string]$Token
         )
-
+    
     # Required Header info
     $header = @{
         "Accept" = "application/json"
         "X-FeApi-Token" = "$Token"
         }
-
+    
     # Gets HX Version
     $hxVersion = Invoke-RestMethod -Uri "$URL/hx/api/v3/version" -Headers $header -Method Get
     $hxVersion
@@ -138,14 +139,14 @@ Function HX-Get-Version {
 #--------------------#
 #  Host Information  #
 #--------------------#
-
+ 
 # Returns a list of All hosts in FireEye
 Function HX-Get-AllHosts {
     # Defining Parameters
     Param(
-        [Parameter(Mandatory=$TRUE)]
+        [Parameter(Mandatory=$true)]
         [string]$URL,
-        [Parameter(Mandatory=$TRUE)]
+        [Parameter(Mandatory=$true)]
         [string]$Token
         )
 
@@ -154,22 +155,22 @@ Function HX-Get-AllHosts {
         "Accept" = "application/json"
         "X-FeApi-Token" = "$Token"
         }
-
+    
     # Gets info on all hosts in HX (Notice the "...?limit=35000" and
     # increase/decrease depending on number of agents in HX)
     $FireEyeHosts = Invoke-RestMethod -Uri "$URL/hx/api/v3/hosts?limit=35000" -Headers $header -Method Get
     $FireEyeHosts
     }
-
+ 
 # Searches HX for a host
 Function HX-Search-Hosts {
     # Defining Parameters
     Param(
-        [Parameter(Mandatory=$TRUE)]
+        [Parameter(Mandatory=$true)]
         [string]$URL,
-        [Parameter(Mandatory=$TRUE)]
+        [Parameter(Mandatory=$true)]
         [string]$Token,
-        [Parameter(Mandatory=$TRUE)]
+        [Parameter(Mandatory=$true)]
         [string]$Search
         )
 
@@ -178,91 +179,77 @@ Function HX-Search-Hosts {
         "Accept" = "application/json"
         "X-FeApi-Token" = "$Token"
         }
-
+    
     # Searches HX for a host that matches the search object
-    $FireEyeSearch = Invoke-RestMethod -Uri "$URL/hx/api/v3/hosts?search=$Search" -Headers $header -Method Get 
+    $FireEyeSearch = Invoke-RestMethod -Method Get -Uri "$URL/hx/api/v3/hosts?limit=35000&search=$Search" -Headers $header
     $FireEyeSearch
     }
-
+ 
 # Delete Host based off Agent ID
-Function HX-Delete-Host {
+Function HX-Del-Host {
     # Defining Parameters
     Param(
-        [Parameter(Mandatory=$TRUE)]
+        [Parameter(Mandatory=$true)]
         [string]$URL,
-        [Parameter(Mandatory=$TRUE)]
+        [Parameter(Mandatory=$true)]
         [string]$Token,
-        [Parameter(Mandatory=$TRUE)]
+        [Parameter(Mandatory=$true)]
         [string]$AgentID
         )
-
+    
     # Required Header info
     $header = @{
         "Accept" = "application/json"
         "X-FeApi-Token" = "$Token"
         }
-
+    
     # Deletes a host from HX using it's AgentID
-    $DeleteHost = Invoke-RestMethod -Uri "$URL/hx/api/v3/hosts/$AgentID" -Headers $header -Method Delete
+    $DeleteHost = Invoke-RestMethod -Uri "$URL/hx/api/v3/hosts/$AgentID" -Headers $header -Method Delete 
     $DeleteHost.StatusCode
     }
-
+ 
 # Get Agent configuration for a host
 Function HX-Get-AgentConf {
     # Defining Parameters
     Param(
-        [Parameter(Mandatory=$TRUE)]
+        [Parameter(Mandatory=$true)]
         [string]$URL,
-        [Parameter(Mandatory=$TRUE)]
+        [Parameter(Mandatory=$true)]
         [string]$Token,
-        [Parameter(Mandatory=$TRUE)]
+        [Parameter(Mandatory=$true)]
         [string]$AgentID
         )
-
+    
     # Required Header information
     $header = @{
         "Accept" = "application/json"
         "X-FeApi-Token" = "$Token"
         }
-
+    
     # Gets agent config for a given AgentID
     $AgentConf = Invoke-RestMethod -Uri "$URL/hx/api/v3/hosts/$AgentID/configuration/actual.json" -Headers $header -Method Get
     $AgentConf
     }
-
-
+ 
+ 
 
 #-------------#
 #  Host Sets  #
 #-------------#
 
 # New Static Host Set Request
-# POST https://HX_IP_address:port_number/hx/api/v3/host_sets/static
-Function HX-Add-HostSet-Static {
+Function HX-Add-StaticHostSet {
     # Defining Parameters
     Param(
-        [Parameter(Mandatory=$TRUE)]
+        [Parameter(Mandatory=$true)]
         [string]$URL,
-        [Parameter(Mandatory=$TRUE)]
+        [Parameter(Mandatory=$true)]
         [string]$Token,
-        [Parameter(Mandatory=$TRUE)]
+        [Parameter(Mandatory=$true)]
         [string]$Name,
         [string[]]$AddHosts
         )
-
-    # Sets up the Body to convert to json
-    $Body =@{
-        name = "$Name"
-        changes = @(
-            @{
-                command = "change";
-                add = @($AddHosts);
-                #remove = []
-            }
-        )
-    }
-    $json = $Body | ConvertTo-Json #-Compress
-    write-host $json
+    
     # Required Header information
     $header = @{
         "Accept" = "application/json"
@@ -270,63 +257,221 @@ Function HX-Add-HostSet-Static {
         "X-FeApi-Token" = "$Token"
         }
 
-    # Adds Static Host Set
-    $addHostSet = irm -Method Post -Uri "$URL/hx/api/v3/host_sets/static" -Headers $header -Body $json -ContentType 'application/json'
-    $addHostSet
+    # Creates Host Set using Name and Hosts Provided
+    if($AddHosts){
+        $Body =@{
+            name = "$Name"
+            changes = @(
+                @{
+                    command = "change"
+                    add = @($AddHosts)
+                    }
+                )
+            }
+        # Converts Body to json
+        $json = $Body | ConvertTo-Json -Depth 4 -Compress
+        
+        # Adds Static Host Set
+        $addHostSet = irm -Method Post -Uri "$URL/hx/api/v3/host_sets/static" -Headers $header -Body $json -ContentType 'application/json'
+        $addHostSet
+        }
+    # Creates Host Set using provided Name
+    Else{
+        $Body =@{
+            name = "$Name"
+            changes = @(
+                @{
+                    command = "change"
+                    # add = @($AddHosts)
+                    }
+                )
+            }
+        # Converts Body to json
+        $json = $Body | ConvertTo-Json -Depth 4 -Compress
+        
+        # Adds Static Host Set
+        $addHostSet = irm -Method Post -Uri "$URL/hx/api/v3/host_sets/static" -Headers $header -Body $json -ContentType 'application/json'
+        $addHostSet
+        }
+    }
+
+# Update a Static Host Set Request
+Function HX-Mod-StaticHostSet {
+    # Defining Parameters
+    Param(
+        [Parameter(Mandatory=$true)]
+        [string]$URL,
+        [Parameter(Mandatory=$true)]
+        [string]$Token,
+        [Parameter(Mandatory=$true)]
+        [string]$Name,
+        [string[]]$AddHost,
+        [string[]]$RemoveHost
+        )
+    
+    # Required Header information
+    $header = @{
+        "X-FeApi-Token" = "$Token"
+        }
+
+    # Gets the ID of the Host Set using the Name info provided
+    $HSID = ((HX-Get-HostSet -URL $URL -Token $Token).data.entries) |Where-Object {$_.name -eq "$Name"} | select _id
+
+    If($HSID){
+        # Sets up the Body to convert to json
+        If($AddHost){
+            $Body =@{
+                name = "$Name"
+                changes = @(
+                    [PSCustomObject]@{
+                        command = "change"
+                        add = @($AddHost)
+                        }
+                    )
+                }
+            # Converts to json
+            $json = $Body | ConvertTo-Json -Depth 5
+                        
+            # Modifies Static Host Set
+            $ModHostSet = irm -Method Put -Uri "$URL/hx/api/v3/host_sets/static/$($HSID._id)" -Headers $header -Body $json -ContentType 'application/json'
+            $ModHostSet
+            }
+        Elseif($RemoveHost){
+            $Body =@{
+                name = "$Name"
+                changes = @(
+                    [PSCustomObject]@{
+                        command = "change"
+                        remove = @($RemoveHost)
+                        }
+                    )
+                }
+            # Converts to json
+            $json = $Body | ConvertTo-Json -Depth 5
+            
+            # Modifies Static Host Set
+            $ModHostSet = irm -Method Put -Uri "$URL/hx/api/v3/host_sets/static/$($HSID._id)" -Headers $header -Body $json -ContentType 'application/json'
+            $ModHostSet
+            }
+        Else{Write-Error "Must Supply -AddHost or -RemoveHost"}
+        }
+    Else{Write-Error "Host Set Not Found"}
     }
 
 # New Dynamic Host Set Request
-# POST https://HX_IP_address:port_number/hx/api/v3/host_sets/dynamic
-
-# Update a Static Host Set Request
-# PUT https://HX_IP_address:port_number/hx/api/v3/host_sets/static:id
+Function HX-Add-DynamicHostSet {
+    # Defining Parameters
+    Param(
+        [Parameter(Mandatory=$true)]
+        [string]$URL,
+        [Parameter(Mandatory=$true)]
+        [string]$Token,
+        [Parameter(Mandatory=$true)]
+        [string]$Body
+        )
+    
+    # Required Header information
+    $header = @{
+        "X-FeApi-Token" = "$Token"
+        }
+    
+    # Adds Dynamic Host Set using JSON provided as Body
+    $addHostSet = irm -Method Post -Uri "$URL/hx/api/v3/host_sets/dynamic" -Headers $header -Body $Body -ContentType 'application/json'
+    $addHostSet
+    }
 
 # Update a Dynamic Host Set Request
-# PUT https://HX_IP_address:port_number/hx/api/v3/host_sets/dynamic:id
+Function HX-Mod-DynamicHostSet {
+    # Defining Parameters
+    Param(
+        [Parameter(Mandatory=$true)]
+        [string]$URL,
+        [Parameter(Mandatory=$true)]
+        [string]$Token,
+        [Parameter(Mandatory=$true)]
+        [string]$Body
+        )
+    
+    # Required Header information
+    $header = @{
+        "X-FeApi-Token" = "$Token"
+        }
+    
+    # Adds Dynamic Host Set using JSON provided as Body
+    $addHostSet = irm -Method Put -Uri "$URL/hx/api/v3/host_sets/dynamic" -Headers $header -Body $Body -ContentType 'application/json'
+    $addHostSet
+    }
 
 # List of Host Sets or info on a single Host Set if ID is provided
 Function HX-Get-HostSet {
     # Defining Parameters
     Param(
-        [Parameter(Mandatory=$TRUE)]
+        [Parameter(Mandatory=$true)]
         [string]$URL,
-        [Parameter(Mandatory=$TRUE)]
+        [Parameter(Mandatory=$true)]
         [string]$Token,
-        [Parameter(Mandatory=$TRUE)]
-        [string]$HostSetID
+        [string]$Name
         )
-
+    
     # Required Header information
     $header = @{
         "Accept" = "application/json"
         "X-FeApi-Token" = "$Token"
         }
 
+    # Gets the ID of the Host Set using the Name info provided
+    $HSID = ((irm -Uri "$URL/hx/api/v3/host_sets?limit=1000" -Headers $header).data.entries) | ? {$_.name -eq "$Name"} | select _id
+
     # Gets info on a single Host Set given the HostSetID
-    If($HostSetID){
-        $getHostSet = Invoke-RestMethod -Uri "$URL/hx/api/v3/host_sets/$HostSetID`?limit=100" -Headers $header -Method Get
+    If($Name -and $HSID){
+        $getHostSet = Invoke-RestMethod -Uri "$URL/hx/api/v3/host_sets/$($HSID._id)?limit=1000" -Headers $header -Method Get
         $getHostSet
         }
     # Gets info on all Host Sets
     Else{
-        $getHostSet = Invoke-RestMethod -Uri "$URL/hx/api/v3/host_sets?limit=100" -Headers $header -Method Get
+        $getHostSet = Invoke-RestMethod -Uri "$URL/hx/api/v3/host_sets?limit=1000" -Headers $header -Method Get
         $getHostSet
         }
     }
 
 # Delete a Host Set by ID Request
-# DELETE https://HX_IP_address:port_number/hx/api/v3/host_sets/:id
+Function HX-Del-HostSet {
+    # Defining Parameters
+    Param(
+        [Parameter(Mandatory=$true)]
+        [string]$URL,
+        [Parameter(Mandatory=$true)]
+        [string]$Token,
+        [Parameter(Mandatory=$true)]
+        [string]$Name
+        )
+    
+    # Required Header information
+    $header = @{
+        "X-FeApi-Token" = "$Token"
+        }
+
+    # Gets the ID of the Host Set using the Name info provided
+    $HSID = ((HX-Get-HostSet -URL $URL -Token $Token).data.entries) |Where-Object {$_.name -eq "$Name"} | select _id
+
+    If($HSID){
+        # Deletes Host Set by ID
+        $delHostSet = Invoke-RestMethod -Method Delete -Uri "$URL/hx/api/v3/host_sets/$($HSID._id)" -Headers $header
+        $delHostSet
+        }
+    Else{Write-Error "Host Set Name not found"}
+}
 
 # List of Hosts Within a Host Set Request
 Function HX-Get-HostSetMembers {
     # Defining Parameters
     Param(
-        [Parameter(Mandatory=$TRUE)]
+        [Parameter(Mandatory=$true)]
         [string]$URL,
-        [Parameter(Mandatory=$TRUE)]
+        [Parameter(Mandatory=$true)]
         [string]$Token,
-        [Parameter(Mandatory=$TRUE)]
-        [string]$HostSetID
+        [Parameter(Mandatory=$true)]
+        [string]$Name
         )
 
     # Required Header information
@@ -334,10 +479,16 @@ Function HX-Get-HostSetMembers {
         "Accept" = "application/json"
         "X-FeApi-Token" = "$Token"
         }
+    
+     # Gets the ID of the Host Set using the Name info provided
+    $HSID = ((HX-Get-HostSet -URL $URL -Token $Token).data.entries) |Where-Object {$_.name -eq "$Name"} | select _id
 
-    # Gets info on hosts within a hostset given the HostSetID
-    $getHostSetMembers = Invoke-RestMethod -Uri "$URL/hx/api/v3/host_sets/$HostSetID/hosts?limit=35000" -Headers $header -Method Get
-    $getHostSetMembers  
+    If($HSID){
+        # Gets info on hosts within a hostset given the HostSetID
+        $getHostSetMembers = Invoke-RestMethod -Uri "$URL/hx/api/v3/host_sets/$($HSID._id)/hosts?limit=35000" -Headers $header -Method Get
+        $getHostSetMembers
+        }
+    Else{Write-Error "Host Set Name not found"}
     }
 
 
@@ -380,18 +531,18 @@ Function HX-Get-HostSetMembers {
 # GET $URL/hx/api/v3/searches/:id/results/:row_id/hosts
 
 
-
+ 
 #--------------#
 #  Indicators  #
 #--------------#
-
+ 
 # Get information on existing IOC
 Function HX-Get-Indicator {
     # Defining Parameters
     Param(
-        [Parameter(Mandatory=$TRUE)]
+        [Parameter(Mandatory=$true)]
         [string]$URL,
-        [Parameter(Mandatory=$TRUE)]
+        [Parameter(Mandatory=$true)]
         [string]$Token,
         [string]$Category,
         [string]$Indicator
@@ -402,7 +553,7 @@ Function HX-Get-Indicator {
         "Accept" = "application/json"
         "X-FeApi-Token" = "$Token"
         }
-
+   
     # Gets information about a specific indicator - If Category and ID are supplied
     If($Indicator -and $Category){
         $IOCs = Invoke-RestMethod -Uri "$URL/hx/api/v3/indicators/$Category/$Indicator" -Headers $header -Method Get
@@ -415,39 +566,48 @@ Function HX-Get-Indicator {
         }
     # Lists all indicators
     else{
-        $IOCs = Invoke-RestMethod -Uri "$URL/hx/api/v3/indicators" -Headers $header -Method Get
+        $IOCs = Invoke-RestMethod -Uri "$URL/hx/api/v3/indicators?limit=1000" -Headers $header -Method Get
         $IOCs
         }
     }
-
+ 
 # Create New IOCs  ###  INCOMPLETE  ###
 Function HX-Add-Indicator {
     # Defining Parameters
     Param(
-        [Parameter(Mandatory=$TRUE)]
+        [Parameter(Mandatory=$true)]
         [string]$URL,
-        [Parameter(Mandatory=$TRUE)]
+        [Parameter(Mandatory=$true)]
         [string]$Token,
-        [string]$Category,
-        [string]$Indicator,
-        [Parameter(Mandatory=$TRUE)]
-        [string]$Body
+        [Parameter(Mandatory=$true)]
+        [string]$Name,
+        [string]$Category = "custom",
+        [string]$Description = "Custom IOC Created via API",
+        [string[]]$Platform = ("win","osx"),
+        [string]$CreateText = "API_Admin"
+        #[string[]]$PresenceConditions,
+        #[string[]]$ExecutionConditions
         )
 
     # Required Header info
     $header = @{
-        "Accept" = "application/json"
         "X-FeApi-Token" = "$Token"
         }
-
-    $createIOC = Invoke-RestMethod -Uri "$URL/hx/api/v3/indicators" -Headers $header -Body $Body -Method Post
+   
+    # Creates Body for request
+    $Body =[PSCustomObject]@{
+        create_text = "$CreateText"
+        description = "$Description"
+        platforms = @($Platform)
+        }
+    # Converts Body to json
+    $json = $Body | ConvertTo-Json -Depth 3
+    
+    # Creates new IOC
+    $createIOC = irm -Uri "$URL/hx/api/v3/indicators/$Category/$Name" -Headers $header -Body $json -Method Put -ContentType 'application/json' 
+    $createIOC    
     }
 
-# New Indicator Request on page 302
-# POST https://HX_IP_address:port_number/hx/api/v3/indicators/:category
-
-# New Indicator with Predefined Name Request on page 306
-# PUT $URL/hx/api/v3/indicators/:category/:indicator
 
 # New Indicator Condition with Defined Type Request on page 321
 # POST https://HX_IP_address:port_number/hx/api/v3/indicators/:category/:indicator/conditions/:type
@@ -468,7 +628,35 @@ Function HX-Add-Indicator {
 # PATCH https://HX_IP_address:port_number/hx/api/v3/indicators/:category/:indicator/conditions
 
 # List of Conditions for an Indicator Request
-# GET https://HX_IP_address:port_number/hx/api/v3/indicators/:category/:indicator/conditions
+Function HX-Get-Indicator-Conditions {
+    # Defining Parameters
+    Param(
+        [Parameter(Mandatory=$true)]
+        [string]$URL,
+        [Parameter(Mandatory=$true)]
+        [string]$Token,
+        [Parameter(Mandatory=$true)]
+        [string]$Category,
+        [Parameter(Mandatory=$true)]
+        [string]$Name,
+        [string]$Type
+        )
+
+    # Required Header information
+    $header = @{
+        "Accept" = "application/json"
+        "X-FeApi-Token" = "$Token"
+        }
+    
+    If($type){
+        $getConditions = irm -Uri "$URL/hx/api/v3/indicators/$Category/$Name/conditions/$type`?limit=100" -Headers $header
+        $getConditions
+        }
+    Else{
+        $getConditions = irm -Uri "$URL/hx/api/v3/indicators/$Category/$Name/conditions?limit=100" -Headers $header
+        $getConditions
+        }
+    }
 
 # List of Conditions for an Indicator by Type Request
 # GET https://HX_IP_address:port_number/hx/api/v3/indicators/:category/:indicator/conditions/:type
@@ -631,7 +819,7 @@ Function HX-Add-Indicator {
 
 # Add a Host to a Bulk Acquisition Request on page 667
 # PUT https://HX_IP_address:port_number/hx/api/v3/acqs/bulk/:id/hosts/:agent_id
- 
+
 # Remove a Host from a Bulk Acquisition Request on page 671
 # DELETE https://HX_IP_address:port_number/hx/api/v3/acqs/bulk/:id/hosts/:agent_id
 
@@ -654,9 +842,9 @@ Function HX-Add-Indicator {
 Function HX-Get-Script {
     # Defining Parameters
     Param(
-        [Parameter(Mandatory=$TRUE)]
+        [Parameter(Mandatory=$true)]
         [string]$URL,
-        [Parameter(Mandatory=$TRUE)]
+        [Parameter(Mandatory=$true)]
         [string]$Token,
         [string]$ScriptID
         )
@@ -666,7 +854,7 @@ Function HX-Get-Script {
         "Accept" = "application/json"
         "X-FeApi-Token" = "$Token"
         }
-
+    
     # Gets info on a single script if the ID is provided
     If($SriptID){
         $getScript = Invoke-RestMethod -Uri "$URL/hx/api/v3/scripts/$SriptID" -Headers $header -Method Get
@@ -686,20 +874,20 @@ Function HX-Get-Script {
 # GET https://HX_IP_address:port_number/hx/api/v3/scripts.zip
 
 
-
+ 
 #---------------#
 #  Containment  #
 #---------------#
-
+ 
 # Request Containment of host by ID
 Function HX-Contain-Request {
     # Defining Parameters
     Param(
-        [Parameter(Mandatory=$TRUE)]
+        [Parameter(Mandatory=$true)]
         [string]$URL,
-        [Parameter(Mandatory=$TRUE)]
+        [Parameter(Mandatory=$true)]
         [string]$Token,
-        [Parameter(Mandatory=$TRUE)]
+        [Parameter(Mandatory=$true)]
         [string]$AgentID
         )
 
@@ -708,21 +896,21 @@ Function HX-Contain-Request {
         "Accept" = "application/json"
         "X-FeApi-Token" = "$Token"
         }
-
+    
     # Requests containment on a host given it's AgentID
     $ReqContain = Invoke-RestMethod -Uri "$URL/hx/api/v3/hosts/$AgentID/containment" -Headers $header -Method Post
     $ReqContain
     }
-
+ 
 # Approve Containment for a host
 Function HX-Contain-Approve {
     # Defining Parameters
     Param(
-        [Parameter(Mandatory=$TRUE)]
+        [Parameter(Mandatory=$true)]
         [string]$URL,
-        [Parameter(Mandatory=$TRUE)]
+        [Parameter(Mandatory=$true)]
         [string]$Token,
-        [Parameter(Mandatory=$TRUE)]
+        [Parameter(Mandatory=$true)]
         [string]$AgentID
         )
 
@@ -731,21 +919,21 @@ Function HX-Contain-Approve {
         "Accept" = "application/json"
         "X-FeApi-Token" = "$Token"
         }
-
+    
     # Approves Containment of a host given it's AgentID and a request exists
     $ApproveContain = Invoke-RestMethod -Uri "$URL/hx/api/v3/hosts/$AgentID/containment" -Headers $header -Method Patch
     $ApproveContain
     }
-
+ 
 # Cancel Containment for a host
 Function HX-Contain-Cancel {
     # Defining Parameters
     Param(
-        [Parameter(Mandatory=$TRUE)]
+        [Parameter(Mandatory=$true)]
         [string]$URL,
-        [Parameter(Mandatory=$TRUE)]
+        [Parameter(Mandatory=$true)]
         [string]$Token,
-        [Parameter(Mandatory=$TRUE)]
+        [Parameter(Mandatory=$true)]
         [string]$AgentID
         )
 
@@ -754,7 +942,7 @@ Function HX-Contain-Cancel {
         "Accept" = "application/json"
         "X-FeApi-Token" = "$Token"
         }
-
+    
     # Cancels containment of a host
     $CancelContain = Invoke-RestMethod -Uri "$URL/hx/api/v3/hosts/$AgentID/containment" -Headers $header -Method Delete
     $CancelContain
@@ -764,11 +952,11 @@ Function HX-Contain-Cancel {
 Function HX-Get-Containment {
     # Defining Parameters
     Param(
-        [Parameter(Mandatory=$TRUE)]
+        [Parameter(Mandatory=$true)]
         [string]$URL,
-        [Parameter(Mandatory=$TRUE)]
+        [Parameter(Mandatory=$true)]
         [string]$Token,
-        [Parameter(Mandatory=$TRUE)]
+        [Parameter(Mandatory=$true)]
         [string]$AgentID
         )
 
@@ -777,7 +965,7 @@ Function HX-Get-Containment {
         "Accept" = "application/json"
         "X-FeApi-Token" = "$Token"
         }
-
+    
     # Gets Containment state of a single host if AgentID is supplied
     If($AgentID){
         $getContain = Invoke-RestMethod -Uri "$URL/hx/api/v3/hosts/$AgentID/containment" -Headers $header -Method Get
